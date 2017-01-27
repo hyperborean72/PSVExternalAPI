@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:task="http://www.springframework.org/schema/task"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd
+     http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+
+    <bean id="transactionTemplate" class="org.springframework.transaction.support.TransactionTemplate">
+        <property name="timeout" value="-1"/>
+        <property name="transactionManager" ref="transactionManager"/>
+    </bean>
+
+    <task:executor id="taskExecutor" pool-size="50"/>
+
+    <bean id="repositoryServiceVis" class="ru.csbi.transport.psv.externalapi.vis.RepositoryServiceImpl">
+    </bean>
+
+    <bean id="visImporter" class="ru.csbi.transport.psv.externalapi.vis.VisImporter">
+        <property name="importPath" value="${vis.importPath}"/>
+        <property name="repositoryService" ref="repositoryServiceVis"/>
+        <property name="ftpServer" value="${vis.ftp.server}"/>
+        <property name="ftpUsername" value="${vis.ftp.username}"/>
+        <property name="ftpPassword" value="${vis.ftp.password}"/>
+        <property name="ftpPort" value="${vis.ftp.port}"/>
+        <property name="folderNameTemplate" value="${vis.folderNameTemplate}"/>
+        <property name="daysBehind" value="${vis.shift}"/>
+        <property name="routeTypes" value="${vis.rtypes}"/>
+
+        <property name="transactionTemplate" ref="transactionTemplate"/>
+        <property name="taskExecutor" ref="taskExecutor"/>
+    </bean>
+
+    <bean id="visImportJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="visImporter"/>
+        <property name="targetMethod" value="doJob"/>
+        <property name="concurrent" value="false"/>
+        <property name="group" value="visImport"/>
+    </bean>
+
+    <!-- Одноразовый импорт при старте приложения -->
+    <bean id="visStartImportTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+        <property name="jobDetail" ref="visImportJob"/>
+        <property name="repeatCount" value="0"/>
+    </bean>
+
+    <!-- Автоматический импорт по расписанию (в 3 часа ночи) -->
+    <bean id="visImportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="visImportJob"/>
+        <property name="cronExpression" value="${vis.cronExpression}"/>
+    </bean>
+
+</beans>

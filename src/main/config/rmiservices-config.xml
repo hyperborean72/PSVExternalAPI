@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <bean id="operationDayFactory" class="ru.csbi.transport.domain.core.FixedHourOperationDayFactory">
+    <property name="dateChangeHour" value="${operationDay.dateChangeHour:3}"/>
+    <property name="nightlyRouteBeginHour" value="${processing.nightlyRouteBeginHour:23}"/>
+  </bean>
+
+  <bean id="vehicleStateService" class="org.springframework.remoting.rmi.RmiProxyFactoryBean" lazy-init="true" >
+    <property name="serviceUrl" value="${vehicle.stateServiceUrl}" />
+    <property name="serviceInterface" value="ru.csbi.transport.openapi.state.PSVStateService" />
+    <property name="refreshStubOnConnectFailure" value="true" />
+    <property name="lookupStubOnStartup" value="false" />
+  </bean>
+
+
+  <bean id="vehicleRepository" class="ru.csbi.transport.psv.externalapi.vehicles.VehicleRepositoryImpl">
+    <property name="vehicleStateService" ref="vehicleStateService"/>
+  </bean>
+
+  <bean id="vehicleRefreshJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+    <property name="targetObject" ref="vehicleRepository"/>
+    <property name="targetMethod" value="refreshSnapshot"/>
+    <property name="concurrent" value="false"/>
+    <property name="group" value="vehicleRefresh"/>
+  </bean>
+
+  <bean id="vehicleRefreshTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+    <property name="jobDetail" ref="vehicleRefreshJob"/>
+    <property name="repeatInterval" value="${vehicle.refreshInterval:10000}"/>
+  </bean>
+
+  <bean class="org.springframework.remoting.rmi.RmiServiceExporter">
+    <property name="serviceName" value="Vehicles"/>
+    <property name="service" ref="vehicleRepository"/>
+    <property name="serviceInterface" value="ru.csbi.transport.openapi.vehicles.PSVStateRepository"/>
+    <property name="registryPort" value="${rmi.registryPort}"/>
+  </bean>
+
+  <bean class="org.springframework.remoting.rmi.RmiServiceExporter">
+    <property name="serviceName" value="Forecast"/>
+    <property name="service" ref="vehicleRepository"/>
+    <property name="serviceInterface" value="ru.csbi.transport.openapi.forecast.ForecastService"/>
+    <property name="registryPort" value="${rmi.registryPort}"/>
+  </bean>
+
+  <bean id="workdayRepository" class="ru.csbi.transport.psv.externalapi.vehicles.PSVWorkdayRepositoryImpl">
+    <property name="operationDayFactory" ref="operationDayFactory"/>
+  </bean>
+
+  <bean class="org.springframework.remoting.rmi.RmiServiceExporter">
+    <property name="serviceName" value="PSVWorkday"/>
+    <property name="service" ref="workdayRepository"/>
+    <property name="serviceInterface" value="ru.csbi.transport.openapi.vehicles.PSVWorkdayRepository"/>
+    <property name="registryPort" value="${rmi.registryPort}"/>
+  </bean>
+
+  <bean class="org.springframework.remoting.rmi.RmiServiceExporter">
+    <property name="serviceName" value="displayMessage"/>
+    <property name="service" ref="displayMessageVisitor"/>
+    <property name="serviceInterface" value="ru.csbi.transport.openapi.messaging.display.MessagingDisplayService"/>
+    <property name="registryPort" value="${rmi.registryPort}"/>
+  </bean>
+
+</beans>

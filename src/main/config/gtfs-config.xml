@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="gtfsExportVisitor" class="ru.csbi.transport.psv.externalapi.gtfs.GTFSExportVisitor" scope="prototype">
+        <property name="exportRoutesWithoutSchedules" value="${gtfs.exportRoutesWithoutSchedules}"/>
+        <property name="rootAgencyId" value="${gtfs.rootAgency.id:orgp}"/>
+        <property name="rootAgencyName" value="${gtfs.rootAgency.name:СПб ГКУ &quot;Организатор перевозок&quot;}"/>
+        <property name="rootAgencyPhone" value="${gtfs.rootAgency.phone:+7-812-573-9531}"/>
+        <property name="rootAgencyUrl" value="${gtfs.rootAgency.url:http://orgp.spb.ru/}"/>
+        <property name="minServiceDate" value="${gtfs.minServiceDate:20081231}"/>
+        <property name="maxServiceDate" value="${gtfs.maxServiceDate:20191230}"/>
+    </bean>
+
+
+    <bean id="workingCalendarRepository" class="ru.csbi.transport.psv.externalapi.gtfs.WorkingCalendarRepositoryImpl"/>
+
+
+    <bean id="gtfsExporter" class="ru.csbi.transport.psv.externalapi.gtfs.GTFSExporter">
+        <property name="exportPath" value="${gtfs.exportPath}"/>
+        <property name="workingCalendarRepository" ref="workingCalendarRepository"/>
+    </bean>
+
+
+    <bean id="gtfsExportJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="gtfsExporter"/>
+        <property name="targetMethod" value="doExport"/>
+        <property name="concurrent" value="false"/>
+        <property name="group" value="gtfsExport"/>
+    </bean>
+
+    <!-- Одноразовый экспорт при старте приложения -->
+    <bean id="gtfsStartExportTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+        <property name="jobDetail" ref="gtfsExportJob"/>
+        <property name="repeatCount" value="0"/>
+    </bean>
+
+    <!-- Автоматический экспорт по расписанию (в 3 часа ночи) -->
+    <bean id="gtfsExportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="gtfsExportJob"/>
+        <property name="cronExpression" value="${gtfs.cronExpression}"/>
+    </bean>
+
+</beans>

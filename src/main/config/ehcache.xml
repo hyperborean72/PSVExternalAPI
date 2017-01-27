@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="http://ehcache.org/ehcache.xsd"
+         updateCheck="false" monitoring="autodetect"
+         dynamicConfig="true"
+         defaultTransactionTimeoutInSeconds="1200">
+
+  <!-- 
+  <defaultCache eternal="false" overflowToDisk="false" maxElementsInMemory="100000" statistics="true" />
+   -->
+
+  <diskStore path="java.io.tmpdir"/>
+
+  <defaultCache
+    eternal="false"
+    overflowToDisk="false"
+    maxElementsInMemory="100000"
+    maxElementsOnDisk  ="1000000"
+    timeToIdleSeconds="1200"
+    timeToLiveSeconds="3600"
+    diskSpoolBufferSizeMB="16"
+    diskPersistent="false"
+    diskExpiryThreadIntervalSeconds="1200"
+    memoryStoreEvictionPolicy="LFU"
+    statistics="true"
+    transactionalMode="off"
+  />
+
+
+</ehcache>

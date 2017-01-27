@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:tx="http://www.springframework.org/schema/tx"
+   xmlns:jee="http://www.springframework.org/schema/jee"
+   xmlns:util="http://www.springframework.org/schema/util"
+   xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd
+     http://www.springframework.org/schema/tx
+     http://www.springframework.org/schema/tx/spring-tx.xsd
+     http://www.springframework.org/schema/jee
+     http://www.springframework.org/schema/jee/spring-jee.xsd
+     http://www.springframework.org/schema/util
+     http://www.springframework.org/schema/util/spring-util.xsd">
+
+  <!-- Декларативное управление транзакциями -->
+  <tx:annotation-driven/>
+
+  <!-- JDBC DataSource -->
+  <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+    <property name="driverClass" value="${jdbc.driver}"/>
+    <property name="jdbcUrl" value="${jdbc.url}"/>
+    <property name="user" value="${jdbc.username}"/>
+    <property name="password" value="${jdbc.password}"/>
+    <property name="initialPoolSize" value="${jdbc.pool.minSize}"/>
+    <property name="minPoolSize" value="${jdbc.pool.minSize}"/>
+    <property name="maxPoolSize" value="${jdbc.pool.maxSize}"/>
+    <property name="maxIdleTime" value="${jdbc.pool.maxIdleTime}"/>
+  </bean>
+
+  <!-- Настройки JPA -->
+  <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+    <property name="dataSource" ref="dataSource"/>
+    <property name="persistenceUnitName" value="TransportJavaSE"/>
+    <property name="persistenceProviderClass" value="org.hibernate.jpa.HibernatePersistenceProvider"/>
+    <property name="jpaProperties">
+      <props>
+        <prop key="hibernate.cache.use_second_level_cache">true</prop>
+        <prop key="hibernate.cache.use_query_cache">false</prop>
+        <prop key="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</prop>
+        <prop key="net.sf.ehcache.configurationResourceName">file:///${user.dir}/config/ehcache.xml</prop>
+      </props>
+    </property>
+  </bean>
+
+  <!--  Регистрация EhCache в JMX -->
+  <bean id="ehCacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+    <property name="shared" value="true"/>
+    <property name="configLocation" value="file:///${user.dir}/config/ehcache.xml"/>
+  </bean>
+
+  <!-- ehcache needs to register itself, we can't just give the bean to jmx ourselves -->
+  <bean id="ehCacheMBeanRegistration" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+    <property name="staticMethod" value="net.sf.ehcache.management.ManagementService.registerMBeans"/>
+    <property name="arguments">
+      <list>
+        <ref bean="ehCacheManager"/>
+        <ref bean="mbeanServer"/>
+        <value>true</value>
+        <value>true</value>
+        <value>true</value>
+        <value>true</value>
+      </list>
+    </property>
+  </bean>
+
+  <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+    <property name="entityManagerFactory" ref="entityManagerFactory"/>
+  </bean>
+
+    <!-- Транзакции на базе JTA -->
+    <!--Creates a default JtaTransactionManager bean with name "transactionManager",
+	matching the default bean name expected by the "annotation-driven" tag-->
+    <!--tx:jta-transaction-manager/-->
+
+</beans>

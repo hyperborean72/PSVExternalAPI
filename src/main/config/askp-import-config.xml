@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans
+        xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="repositoryServiceAskp" class="ru.csbi.transport.psv.externalapi.askp.RepositoryServiceImpl"/>
+
+    <bean id="askpImporter" class="ru.csbi.transport.psv.externalapi.askp.AskpConsumer">
+        <property name="repositoryService" ref="repositoryServiceAskp"/>
+        <property name="importPath" value="${askp.importPath}"/>
+        <property name="login" value="${askp.login}"/>
+        <property name="password" value="${askp.password}"/>
+        <property name="daysBehind" value="${askp.daysBehind}"/>
+        <property name="dateTemplate" value="${askp.dateTemplate}"/>
+    </bean>
+
+    <bean id="askpImportJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="askpImporter"/>
+        <property name="targetMethod" value="processTrafficData"/>
+        <property name="concurrent" value="false"/>
+        <property name="group" value="askpImport"/>
+    </bean>
+
+    <!-- Одноразовый импорт при старте приложения -->
+    <bean id="askpStartImportTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+        <property name="jobDetail" ref="askpImportJob"/>
+        <property name="repeatCount" value="0"/>
+    </bean>
+
+    <!-- Автоматический импорт по расписанию (в 3 часа ночи) -->
+    <bean id="askpImportTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="askpImportJob"/>
+        <property name="cronExpression" value="${askp.cronExpression}"/>
+    </bean>
+
+</beans>

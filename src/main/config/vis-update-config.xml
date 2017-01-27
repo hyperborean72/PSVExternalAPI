@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans
+    xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="updaterServiceVis" class="ru.csbi.transport.psv.externalapi.updateVis.RepositoryServiceImpl"/>
+
+    <bean id="visUpdater" class="ru.csbi.transport.psv.externalapi.updateVis.VisUpdater">
+        <property name="importPath" value="${vis.importPath}"/>
+        <property name="repositoryService" ref="updaterServiceVis"/>
+        <property name="ftpServer" value="${vis.ftp.server}"/>
+        <property name="ftpUsername" value="${vis.ftp.username}"/>
+        <property name="ftpPassword" value="${vis.ftp.password}"/>
+        <property name="ftpPort" value="${vis.ftp.port}"/>
+        <property name="folderNameTemplate" value="${vis.folderNameTemplate}"/>
+        <property name="daysBehind" value="${vis.shift}"/>
+        <property name="routeTypes" value="${vis.rtypes}"/>
+    </bean>
+
+    <bean id="visUpdateJob" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="targetObject" ref="visUpdater"/>
+        <property name="targetMethod" value="doJob"/>
+        <property name="concurrent" value="false"/>
+        <property name="group" value="visUpdate"/>
+    </bean>
+
+    <!-- Одноразовый импорт при старте приложения -->
+    <bean id="visStartUpdateTrigger" class="org.springframework.scheduling.quartz.SimpleTriggerBean">
+        <property name="jobDetail" ref="visUpdateJob"/>
+        <property name="repeatCount" value="0"/>
+    </bean>
+
+    <!-- Автоматический импорт по расписанию -->
+    <bean id="visUpdateTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+        <property name="jobDetail" ref="visUpdateJob"/>
+        <property name="cronExpression" value="${updateVis.cronExpression}"/>
+    </bean>
+
+</beans>

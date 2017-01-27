@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans.xsd
+         http://www.springframework.org/schema/util
+         http://www.springframework.org/schema/util/spring-util.xsd">
+
+
+  <bean id="scheduleExporter" class="ru.csbi.transport.psv.externalapi.schedule.ScheduleExporter">
+    <property name="ftpsDataPutter" ref="ftpsDataPutter"/>
+    <property name="scheduleDataGetter" ref="scheduleDataGetter"/>
+    <property name="sekopDataExporterList">
+      <list>
+
+        <ref bean="holidaysExporter"/>
+      </list>
+    </property>
+  </bean>
+
+  <bean id="busPoiExporter" class="ru.csbi.transport.psv.externalapi.schedule.sekop.BusPoiExporter"/>
+  <bean id="tramPoiExporter" class="ru.csbi.transport.psv.externalapi.schedule.sekop.TramPoiExporter"/>
+  <bean id="trolleyPoiExporter" class="ru.csbi.transport.psv.externalapi.schedule.sekop.TrolleyPoiExporter"/>
+  <bean id="holidaysExporter" class="ru.csbi.transport.psv.externalapi.schedule.sekop.HolidaysExporter"/>
+  
+  <bean id="ftpsDataPutter" class="ru.csbi.transport.psv.externalapi.schedule.FtpsDataPutter">
+    <property name="login" value="${scheduleExport.ftp.login}"/>
+    <property name="password" value="${scheduleExport.ftp.password}"/>
+    <property name="url" value="${scheduleExport.ftp.server}"/>
+  </bean>
+
+  <bean id="scheduleDataGetter" class="ru.csbi.transport.psv.externalapi.schedule.ScheduleDataGetter"/>
+
+
+  <bean id="exportScheduleJobDetail"
+        class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+
+    <property name="targetObject" ref="scheduleExporter"/>
+    <property name="targetMethod" value="doExport"/>
+
+    <property name="concurrent" value="false"/>
+
+    <property name="group" value="scheduleExport"/>
+  </bean>
+
+  <bean id="exportSchedule" class="org.springframework.scheduling.quartz.CronTriggerBean">
+    <property name="jobDetail" ref="exportScheduleJobDetail"/>
+    <property name="cronExpression" value="${scheduleExport.cronExpression}"/>
+  </bean>
+
+</beans>

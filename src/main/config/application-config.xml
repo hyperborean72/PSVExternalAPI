@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans
+   xmlns="http://www.springframework.org/schema/beans"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xmlns:context="http://www.springframework.org/schema/context"
+   xsi:schemaLocation="
+     http://www.springframework.org/schema/beans
+     http://www.springframework.org/schema/beans/spring-beans.xsd
+     http://www.springframework.org/schema/context
+     http://www.springframework.org/schema/context/spring-context.xsd">
+
+  <!-- Включение использования аннотаций для конфигурирования -->
+  <context:annotation-config/>
+
+  <context:property-placeholder location="context/context.properties"/>
+
+  <import resource="shutdown-config.xml"/>
+  <import resource="data-access-config.xml"/>
+  <import resource="gtfs-config.xml"/>
+  <import resource="nc-export-config.xml"/>
+  <import resource="fors-export-config.xml"/>
+  <import resource="rmiservices-config.xml"/>
+  <import resource="schedule-export-config.xml"/>
+  <import resource="scheduler-config.xml"/>
+  <import resource="jmx-config.xml"/>
+  <import resource="vis-import-config.xml"/>
+  <import resource="vis-update-config.xml"/>
+  <import resource="askp-import-config.xml"/>
+  <import resource="message-config.xml"/>
+
+</beans>

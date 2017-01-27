@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <bean id="remoteControl" class="ru.csbi.transport.psv.externalapi.RemoteControlImpl">
+    <property name="shutdownLatch" ref="shutdownLatch"/>
+  </bean>
+
+  <bean id="mbeanServer" class="org.springframework.jmx.support.MBeanServerFactoryBean">
+    <property name="locateExistingServerIfPossible" value="true"/>
+  </bean>
+
+  <bean id="mbeanExporter" class="org.springframework.jmx.export.MBeanExporter" lazy-init="false">
+    <property name="beans">
+      <map>
+        <entry key="ru.csbi.transport.psv.externalapi:name=control" value-ref="remoteControl"/>
+        <entry key="ru.csbi.transport.psv.externalapi:name=vehicle" value-ref="vehicleRepository"/>
+      </map>
+    </property>
+  </bean>
+</beans>
