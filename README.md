@@ -14,7 +14,7 @@
 предоставляемого Spring механизма (Async)TaskExecutor - TransactionTemplate.
 
 В результате формируются путевые листы водителей с сохранением в БД.
-Работа с БД Oracle происходит с использование Persistence API (для create, update, delete) и Criteria API (read)
+Работа с БД Oracle происходит с использование Persistence entityManager API (для create, update, delete) и Criteria API (read)
 
 ***
 
@@ -32,4 +32,4 @@ Implemented in two versions: regular run by the scheduler (vis module) and on-de
 Asynchronous parallel (concurrent) reading from all the park files (19 pcs.) implemented by means of Spring provided mechanism (Async)TaskExecutor - TransactionTemplate.
 
 The driver waybills are formed and written into the database.
-Interaction with Oracle database implemented by use of Persistence API (for create, update, delete operations) and the Criteria API (for read operations)
+Interaction with Oracle database implemented by use of Persistence entityManager API (for create, update, delete operations) and the Criteria API (for read operations)
